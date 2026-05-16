@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analisador de Rede</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Analisador de Rede</h1>
+        <p class="subtitle">Ferramenta de diagnóstico de rede completa</p>
+      </header>
+
+      <main>
+        <section class="controls">
+          <div class="control-group">
+            <h2>Testes de IP</h2>
+            <button id="btn-local-ip" class="btn">IP Local</button>
+            <button id="btn-public-ip" class="btn">IP Público</button>
+          </div>
+
+          <div class="control-group">
+            <h2>DNS</h2>
+            <div class="input-row">
+              <input
+                type="text"
+                id="dns-input"
+                placeholder="ex: google.com ou 8.8.8.8"
+                value="google.com"
+              />
+              <button id="btn-dns" class="btn">DNS Lookup</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2>Conectividade</h2>
+            <div class="input-row">
+              <input
+                type="text"
+                id="host-input"
+                placeholder="ex: 8.8.8.8 ou google.com"
+                value="8.8.8.8"
+              />
+              <button id="btn-ping" class="btn">Ping</button>
+              <button id="btn-traceroute" class="btn">Rota</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2>Portas</h2>
+            <button id="btn-listening" class="btn">Portas em Escuta</button>
+            <button id="btn-scan" class="btn">Scan de Portas</button>
+          </div>
+
+          <div class="control-group full-report">
+            <button id="btn-report" class="btn btn-primary">
+              Relatório Completo
+            </button>
+          </div>
+
+          <div id="status-bar" class="status-bar hidden">
+            <div class="spinner"></div>
+            <span id="status-text">Executando...</span>
+          </div>
+        </section>
+
+        <section id="output" class="output hidden">
+          <div class="output-header">
+            <h2>Resultados</h2>
+            <button id="btn-export" class="btn btn-sm" title="Exportar relatório">
+              💾 Exportar
+            </button>
+            <button id="btn-copy" class="btn btn-sm" title="Copiar tudo">
+              📋 Copiar
+            </button>
+            <button id="btn-clear" class="btn btn-sm" title="Limpar">
+              🗑️ Limpar
+            </button>
+          </div>
+          <pre id="output-content"></pre>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
