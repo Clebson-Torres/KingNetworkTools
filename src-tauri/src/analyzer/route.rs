@@ -244,9 +244,10 @@ pub fn parse_traceroute_output(output: &str) -> Result<Vec<Hop>, String> {
             continue;
         }
 
-        let rtts: Vec<f32> = parts.iter().skip(2)
-            .filter(|s| s.ends_with("ms"))
-            .filter_map(|s| s.trim_end_matches("ms").parse::<f32>().ok())
+        let rtts: Vec<f32> = parts[2..]
+            .windows(2)
+            .filter(|pair| pair[1] == "ms")
+            .filter_map(|pair| pair[0].parse::<f32>().ok())
             .collect();
 
         let min_ms = rtts.iter().cloned().fold(f32::MAX, f32::min);

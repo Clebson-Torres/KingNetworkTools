@@ -600,13 +600,21 @@ async function doContinuousPing() {
     if (!continuousPingRunning) return;
     try {
       const r = await invoke("ping", { host, count: 1 });
-      if (r.packets_received > 0) {
-        pingData.push(r.avg_ms || r.min_ms);
-        if (pingData.length > MAX_PING_POINTS) pingData.shift();
-        updateStats();
+      if (r && r.packets_received > 0) {
+        const val = r.avg_ms || r.min_ms || 0;
+        if (val > 0) {
+          pingData.push(val);
+          if (pingData.length > MAX_PING_POINTS) pingData.shift();
+          updateStats();
+        }
       }
-    } catch {}
+    } catch (e) {
+      console.error("Ping continuo erro:", e);
+    }
     if (continuousPingRunning) continuousPingTimer = setTimeout(pingOnce, 1000);
+  }
+  if (pingData.length === 0) {
+    graphStats.innerHTML = '<span style="color:var(--text-dim)">Aguardando primeiro ping...</span>';
   }
   pingOnce();
 }
