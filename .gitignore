@@ -2,7 +2,6 @@
 # Dependências
 # ======================
 node_modules/
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
@@ -101,7 +100,6 @@ tauri.conf.local.json
 # Relatórios gerados pelo app
 # ======================
 reports/
-*.html
 *.txt
 !src-tauri/analyzer/*.rs  # Exceção: não ignora os arquivos fonte .rs
 !index.html  # Exceção: mantém o index.html fonte
