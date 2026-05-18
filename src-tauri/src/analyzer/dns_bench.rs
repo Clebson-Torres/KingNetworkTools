@@ -45,33 +45,35 @@ pub fn benchmark_dns() -> Vec<DnsServer> {
 }
 
 fn benchmark_dns_linux(ip: &str) -> (u32, String) {
-    let output = std::process::Command::new("dig")
-        .args(["@", ip, "google.com", "+stats"])
+    // Check if dig is available
+    let dig_check = std::process::Command::new("which")
+        .arg("dig")
         .output();
 
-    match output {
-        Ok(out) if out.status.success() => {
-            let stdout = String::from_utf8_lossy(&out.stdout);
-            for line in stdout.lines() {
-                if line.contains("Query time:") {
-                    if let Some(ms_str) = line.split_whitespace().nth(3) {
-                        if let Ok(ms) = ms_str.parse::<u32>() {
-                            return (ms, "OK".to_string());
+    let dig_available = dig_check.map(|o| o.status.success()).unwrap_or(false);
+
+    if dig_available {
+        let output = std::process::Command::new("dig")
+            .args(["@", ip, "google.com", "+stats"])
+            .output();
+
+        if let Ok(out) = output {
+            if out.status.success() {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                for line in stdout.lines() {
+                    if line.contains("Query time:") {
+                        if let Some(ms_str) = line.split_whitespace().nth(3) {
+                            if let Ok(ms) = ms_str.parse::<u32>() {
+                                return (ms, "OK".to_string());
+                            }
                         }
                     }
                 }
             }
-            (0, "Falha ao parsear resposta".to_string())
-        }
-        _ => {
-            let fallback = benchmark_dns_nslookup(ip);
-            if fallback.0 > 0 {
-                fallback
-            } else {
-                (0, "Falha ao executar dig".to_string())
-            }
         }
     }
+
+    benchmark_dns_nslookup(ip)
 }
 
 fn benchmark_dns_nslookup(ip: &str) -> (u32, String) {

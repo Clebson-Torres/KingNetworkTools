@@ -1,4 +1,5 @@
 use serde::Serialize;
+use super::route;
 
 #[derive(Debug, Serialize)]
 pub struct MtrHop {
@@ -17,14 +18,37 @@ pub fn run_mtr(host: &str, cycles: u8) -> Result<Vec<MtrHop>, String> {
         return run_mtr_windows(host, cycles);
     }
 
-    let cycles_str = cycles.to_string();
-    let output = std::process::Command::new("mtr")
-        .args(["--report", "--report-cycles", &cycles_str, "--no-dns", host])
-        .output()
-        .map_err(|e| format!("Falha ao executar mtr: {}", e))?;
+    let mtr_check = std::process::Command::new("which").arg("mtr").output();
+    let mtr_available = mtr_check.map(|o| o.status.success()).unwrap_or(false);
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    parse_mtr_output(&stdout)
+    if mtr_available {
+        let cycles_str = cycles.to_string();
+        match std::process::Command::new("mtr")
+            .args(["--report", "--report-cycles", &cycles_str, "--no-dns", host])
+            .output()
+        {
+            Ok(output) if output.status.success() => {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if let Ok(hops) = parse_mtr_output(&stdout) {
+                    return Ok(hops);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Fallback: use traceroute data as MTR-like results
+    let hops = route::trace_route(host)?;
+    Ok(hops.into_iter().map(|h| MtrHop {
+        hop: h.hop_number as u8,
+        host: h.address,
+        loss_pct: h.loss_pct,
+        avg_ms: h.avg_ms,
+        best_ms: h.min_ms,
+        worst_ms: h.max_ms,
+        jitter_ms: if h.max_ms > h.min_ms { h.max_ms - h.min_ms } else { 0.0 },
+        quality: h.status,
+    }).collect())
 }
 
 fn parse_mtr_output(output: &str) -> Result<Vec<MtrHop>, String> {

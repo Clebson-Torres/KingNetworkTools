@@ -221,6 +221,8 @@ pub fn get_public_ip_info() -> Result<IpInfo, String> {
 
     let resp = agent
         .get("https://ip-api.com/json/?fields=status,country,countryCode,region,regionName,city,isp,org,as,asname,proxy,hosting,query,reverse")
+        .header("User-Agent", "KingAnaliser/1.0")
+        .header("Accept", "application/json")
         .call()
         .map_err(|e| format!("Falha ao consultar ip-api: {}", e))?;
 
