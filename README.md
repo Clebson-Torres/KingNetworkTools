@@ -1,4 +1,4 @@
-# 🌐 KingAnaliser — Analisador de Rede
+# 🌐 King Analiser — Analisador de Rede
 
 App desktop para diagnóstico completo de rede, construído com **Tauri v2 + Rust + Vite**.
 Executa análises diretamente no sistema operacional via backend Rust, sem dependência de serviços externos além do IP público.
@@ -36,8 +36,8 @@ Acesse a página de [Releases](https://github.com/Clebson-Torres/KingAnaliser/re
 
 | Plataforma | Arquivo |
 |---|---|
-| Windows | `KingAnaliser_x.x.x_x64-setup.exe` |
-| Windows (MSI) | `KingAnaliser_x.x.x_x64_en-US.msi` |
+| Windows | `King-Analiser_x.x.x_x64-setup.exe` |
+| Windows (MSI) | `King-Analiser_x.x.x_x64_en-US.msi` |
 | Linux (AppImage) | `king-analiser_x.x.x_amd64.AppImage` |
 | Linux (Debian/Ubuntu) | `king-analiser_x.x.x_amd64.deb` |
 

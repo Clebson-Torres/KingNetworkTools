@@ -113,7 +113,7 @@ pub fn generate_report(
 
     r.push_str(&format!("\n{}\n", "━".repeat(58)));
     r.push_str(&format!("[FIM DO RELATÓRIO]\n"));
-    r.push_str(&format!("Gerado por KingAnaliser em {}\n", now));
+    r.push_str(&format!("Gerado por King Analiser em {}\n", now));
     r.push_str(&format!("{}\n", "━".repeat(58)));
 
     r
