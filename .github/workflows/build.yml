@@ -15,13 +15,13 @@ jobs:
   # Linux — AppImage (portátil) + .deb
   # ──────────────────────────────────────────
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Dependências do sistema (WebKit + Tauri)
+      - name: Dependências do sistema
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -49,7 +49,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # Extrai "1.2.3" da tag "v1.2.3"
       - name: Extrair versão da tag
         run: |
           VERSION="${{ github.ref_name }}"
@@ -57,15 +56,12 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Versão detectada: $VERSION"
 
-      # Atualiza version no tauri.conf.json e Cargo.toml
       - name: Sincronizar versão nos configs
         run: |
           jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > /tmp/tauri.conf.json
           mv /tmp/tauri.conf.json src-tauri/tauri.conf.json
-
           sed -i "0,/^version = /s/^version = \"[^\"]*\"/version = \"$VERSION\"/" \
             src-tauri/Cargo.toml
-
           echo "tauri.conf.json → $(jq -r .version src-tauri/tauri.conf.json)"
           echo "Cargo.toml      → $(grep '^version' src-tauri/Cargo.toml | head -1)"
 
@@ -89,11 +85,81 @@ jobs:
             | `*-setup.exe` | Instalador | Windows |
             | `*_x64_en-US.msi` | Instalador MSI | Windows |
             | `*-portable.exe` | **Portátil — sem instalação** | Windows |
-            | `*.AppImage` | **Portátil — sem instalação** | Linux |
-            | `*.deb` | Pacote Debian/Ubuntu | Linux |
+            | `*.AppImage` | **Portátil — sem instalação** | Linux (Ubuntu/Debian) |
+            | `*.deb` | Pacote Debian/Ubuntu | Ubuntu / Debian |
+            | `*.rpm` | Pacote RPM | **Fedora / openSUSE** |
           releaseDraft: false
           prerelease: false
           args: --target x86_64-unknown-linux-gnu --bundles appimage,deb
+
+  # ──────────────────────────────────────────
+  # Fedora — RPM nativo
+  # ──────────────────────────────────────────
+  build-fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependências do sistema
+        run: |
+          dnf install -y \
+            webkit2gtk4.1-devel \
+            gtk3-devel \
+            libappindicator-gtk3-devel \
+            librsvg2-devel \
+            openssl-devel \
+            pkg-config \
+            curl \
+            jq \
+            rpm-build \
+            nodejs \
+            npm
+
+      - name: Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Extrair versão da tag
+        shell: bash
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Versão detectada: $VERSION"
+
+      - name: Sincronizar versão nos configs
+        run: |
+          jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > /tmp/tauri.conf.json
+          mv /tmp/tauri.conf.json src-tauri/tauri.conf.json
+          sed -i "0,/^version = /s/^version = \"[^\"]*\"/version = \"$VERSION\"/" \
+            src-tauri/Cargo.toml
+          echo "tauri.conf.json → $(jq -r .version src-tauri/tauri.conf.json)"
+          echo "Cargo.toml      → $(grep '^version' src-tauri/Cargo.toml | head -1)"
+
+      - name: npm install
+        run: npm install
+
+      - name: Build (Tauri — RPM)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'King Analiser ${{ github.ref_name }}'
+          releaseBody: 'Build automático — ${{ github.ref_name }}'
+          releaseDraft: false
+          prerelease: false
+          args: --target x86_64-unknown-linux-gnu --bundles rpm
 
   # ──────────────────────────────────────────
   # Windows — Instaladores + .exe portátil
@@ -121,7 +187,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # Extrai "1.2.3" da tag "v1.2.3"
       - name: Extrair versão da tag
         shell: bash
         run: |
@@ -130,21 +195,16 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Versão detectada: $VERSION"
 
-      # Atualiza version no tauri.conf.json e Cargo.toml
       - name: Sincronizar versão nos configs
         shell: bash
         run: |
-          # tauri.conf.json — substitui o campo version via PowerShell (jq não está no Windows runner)
           powershell -Command "
             \$json = Get-Content 'src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
             \$json.version = '${{ env.VERSION }}'
             \$json | ConvertTo-Json -Depth 10 | Set-Content 'src-tauri/tauri.conf.json'
           "
-
-          # Cargo.toml — substitui apenas a primeira ocorrência de version = "..."
           sed -i "0,/^version = /s/^version = \"[^\"]*\"/version = \"$VERSION\"/" \
             src-tauri/Cargo.toml
-
           echo "Cargo.toml → $(grep '^version' src-tauri/Cargo.toml | head -1)"
 
       - name: npm install
@@ -162,7 +222,6 @@ jobs:
           prerelease: false
           args: --target x86_64-pc-windows-msvc
 
-      # Sobe o .exe puro como portátil com o nome correto da versão
       - name: Upload .exe portátil ao Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -171,7 +230,7 @@ jobs:
           EXE=$(find src-tauri/target/x86_64-pc-windows-msvc/release \
             -maxdepth 1 -name "*.exe" | head -1)
           if [ -f "$EXE" ]; then
-            PORTABLE="KingAnaliser_${{ env.VERSION }}_x64-portable.exe"
+            PORTABLE="KingNetworkTools_${{ env.VERSION }}_x64-portable.exe"
             cp "$EXE" "$PORTABLE"
             gh release upload ${{ github.ref_name }} "$PORTABLE" --clobber
           fi
