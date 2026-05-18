@@ -1,4 +1,4 @@
-# 🌐 King Analiser — Analisador de Rede
+# 🌐 KingNetworkTools — Analisador de Rede
 
 App desktop para diagnóstico completo de rede, construído com **Tauri v2 + Rust + Vite**.
 Executa análises diretamente no sistema operacional via backend Rust, sem dependência de serviços externos além do IP público.
