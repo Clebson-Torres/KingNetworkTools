@@ -14,9 +14,11 @@ pub struct HttpTiming {
 }
 
 const TARGETS: &[&str] = &[
-    "https://google.com",
-    "https://cloudflare.com",
-    "https://github.com",
+    "https://www.google.com",
+    "https://www.uol.com.br",
+    "https://www.globo.com",
+    "https://www.terra.com.br",
+    "https://www.cloudflare.com",
 ];
 
 pub fn get_http_targets() -> Vec<String> {

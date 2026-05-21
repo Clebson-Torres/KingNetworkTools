@@ -12,6 +12,7 @@ const D = (id) => document.getElementById(id);
 const sidebarNav = D("sidebar-nav");
 const viewContainer = D("view-container");
 const toastContainer = D("toast-container");
+const navItems = document.querySelectorAll(".nav-item[data-view]");
 const hostInput = D("host-input");
 const trHost = D("tr-host-input");
 const portsHost = D("ports-host");
@@ -47,20 +48,15 @@ function toast(msg, type = "info") {
   setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3500);
 }
 
-// ─── Navigation ───
-document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    const view = btn.dataset.view;
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    const target = D("view-" + view);
-    if (target) target.classList.add("active");
-    D("view-title").textContent = btn.querySelector("span:last-child").textContent;
-  });
-});
-
 // ─── Utility ───
+function switchView(name) {
+  document.querySelectorAll(".nav-item[data-view]").forEach(b => b.classList.remove("active"));
+  const btn = document.querySelector(`.nav-item[data-view="${name}"]`);
+  if (btn) btn.classList.add("active");
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const target = document.getElementById("view-" + name);
+  if (target) target.classList.add("active");
+}
 function showOutput(containerId) {
   const el = D(containerId);
   if (el) el.classList.remove("hidden");
@@ -260,10 +256,13 @@ async function showPing() {
 
 // ─── Traceroute ───
 async function showTraceroute() {
+  switchView("traceroute");
   const host = trHost.value.trim() || "8.8.8.8";
   await withLoading("Traceroute...", "traceroute", "traceroute-output", async () => {
-    clearOutput("traceroute-output");
+    const loadMsg = "⏳ Executando traceroute para " + host + ". Isso pode levar até 30 segundos...\n";
+    appendOutput("traceroute-output", loadMsg);
     const hops = await invoke("trace_route", { host });
+    clearOutput("traceroute-output");
     const rows = hops.map(h => {
       const sCls = h.status === "ok" ? "quality-good" : h.status === "warning" ? "quality-warn" : "quality-bad";
       return [
@@ -289,11 +288,14 @@ async function showTraceroute() {
 
 // ─── MTR ───
 async function showMtr() {
+  switchView("traceroute");
   const host = trHost.value.trim() || "8.8.8.8";
   await withLoading("MTR...", "mtr", "traceroute-output", async () => {
+    const loadMsg = "⏳ Executando MTR para " + host + " com 5 ciclos. Isso pode levar até 60 segundos...\n";
     clearOutput("traceroute-output");
-    appendOutput("traceroute-output", "  Executando MTR para " + host + " com 5 ciclos...\n");
+    appendOutput("traceroute-output", loadMsg);
     const hops = await invoke("run_mtr", { host, cycles: 5 });
+    clearOutput("traceroute-output");
     const rows = hops.map(h => [
       String(h.hop), h.host,
       '<span class="' + (h.loss_pct === 0 ? "quality-good" : "quality-bad") + '">' + h.loss_pct.toFixed(1) + "%</span>",

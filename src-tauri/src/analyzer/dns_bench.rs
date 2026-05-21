@@ -204,6 +204,37 @@ fn benchmark_dns_tcp(ip: &str) -> (u32, String) {
 }
 
 fn benchmark_dns_windows(ip: &str) -> (u32, String) {
+    // Try nslookup first (faster than PowerShell cold-start)
+    let output = crate::process::command("nslookup")
+        .args(["google.com", ip])
+        .output();
+
+    if let Ok(out) = output {
+        if out.status.success() {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            for line in stdout.lines() {
+                if line.contains("msec") {
+                    for (i, word) in line.split_whitespace().enumerate() {
+                        if word == "msec" {
+                            if let Some(prev) = line.split_whitespace().nth(i.saturating_sub(1)) {
+                                if let Ok(ms) = prev.trim_end_matches(|c: char| !c.is_ascii_digit()).parse::<u32>() {
+                                    return (ms, "OK".to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback: direct TCP/53 connection timing (lightweight)
+    let result = benchmark_dns_tcp(ip);
+    if result.0 > 0 {
+        return result;
+    }
+
+    // Last resort: PowerShell (slow but works)
     let script = format!(
         "$sw = [Diagnostics.Stopwatch]::StartNew(); \
          Resolve-DnsName google.com -Server {} | Out-Null; \
@@ -226,6 +257,6 @@ fn benchmark_dns_windows(ip: &str) -> (u32, String) {
                 (0, "Falha ao medir latência".to_string())
             }
         }
-        _ => (0, "Falha ao executar PowerShell".to_string()),
+        _ => (0, "Falha ao executar DNS".to_string()),
     }
 }
