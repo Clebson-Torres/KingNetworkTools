@@ -29,6 +29,8 @@ pub fn run() {
             commands::generate_report,
             commands::start_continuous_ping,
             commands::run_speedtest,
+            commands::check_update,
+            commands::open_url,
         ])
         .run(tauri::generate_context!())
         .expect("Erro ao iniciar o aplicativo Tauri");

@@ -12,3 +12,4 @@ pub mod report;
 pub mod route;
 pub mod speedtest;
 pub mod tests;
+pub mod update;

@@ -577,6 +577,40 @@ body {
   accent-color: var(--gold);
 }
 
+/* ─── Update ─── */
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #1a3a1a;
+  border-bottom: 1px solid #2d6a2d;
+  color: #9ece6a;
+  font-size: 0.85rem;
+}
+.update-banner.hidden { display: none; }
+.update-banner .btn-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #9ece6a;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.update-banner .btn-close:hover { color: #fff; }
+
+/* ─── Version Info ─── */
+.version-info {
+  padding: 6px 16px 10px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  user-select: none;
+}
+
 /* ─── Speed Test ─── */
 .speedtest-phase {
   text-align: center;

@@ -535,6 +535,22 @@ async function showSpeedTest() {
   }
 }
 
+// ─── Update ───
+async function checkForUpdates() {
+  try {
+    const info = await invoke("check_update");
+    D("version-info").textContent = "v" + info.current_version;
+    if (info.has_update) {
+      const banner = D("update-banner");
+      D("update-banner-text").textContent = "🚀 Nova versão v" + info.latest_version + " disponível!";
+      banner.classList.remove("hidden");
+      let releaseUrl = info.release_url;
+      D("btn-update").onclick = () => invoke("open_url", { url: releaseUrl });
+      D("btn-dismiss-update").onclick = () => banner.classList.add("hidden");
+    }
+  } catch (_) { /* offline ou erro — silencioso */ }
+}
+
 // ─── Report ───
 async function showFullReport() {
   await withLoading("Relatório...", "report", "report-output", async () => {
@@ -935,4 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (scanTimeout) {
     scanTimeout.addEventListener("input", () => { scanTimeoutLabel.textContent = scanTimeout.value + "ms"; });
   }
+
+  // Check for updates
+  checkForUpdates();
 });

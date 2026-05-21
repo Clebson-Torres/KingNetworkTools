@@ -1,6 +1,6 @@
 use crate::analyzer::{
     dns, dns_bench, gateway, http_timing, iface_stats, ip, mtr, network_scan, ports, quality,
-    report, route, speedtest,
+    report, route, speedtest, update,
 };
 use tauri::Emitter;
 
@@ -264,4 +264,24 @@ pub async fn generate_report(
         &started_at,
         &ended_at,
     )
+}
+
+#[tauri::command]
+pub async fn check_update() -> update::UpdateInfo {
+    tokio::task::spawn_blocking(update::check_for_update)
+        .await
+        .unwrap_or_else(|_| update::UpdateInfo {
+            current_version: env!("CARGO_PKG_VERSION").to_string(),
+            latest_version: String::new(),
+            has_update: false,
+            release_url: String::new(),
+            release_notes: String::new(),
+        })
+}
+
+#[tauri::command]
+pub async fn open_url(url: String) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || update::open_url(&url))
+        .await
+        .map_err(|e| format!("Erro interno: {}", e))?
 }
